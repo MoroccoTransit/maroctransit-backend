@@ -8,12 +8,19 @@ import { UsersModule } from '../users/users.module';
 import { RolesModule } from '../roles/roles.module';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { PasswordResetService } from './password-reset.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { PasswordResetToken } from 'src/users/entities/password-reset-token.entity';
+import { User } from 'src/users/entities/user.entity';
+import { MailModule } from 'src/shared/mail/mail-upload.service';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
+    TypeOrmModule.forFeature([PasswordResetToken, User]),
     PassportModule,
     UsersModule,
+    MailModule,
     RolesModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -24,7 +31,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       inject: [ConfigService],
     }),
   ],
-  providers: [AuthService, LocalStrategy, JwtStrategy],
+  providers: [AuthService, PasswordResetService, LocalStrategy, JwtStrategy],
   controllers: [AuthController],
 })
 export class AuthModule {}
