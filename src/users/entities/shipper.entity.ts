@@ -1,6 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, OneToMany } from 'typeorm';
 import { User } from './user.entity';
-
+import { Load } from 'src/loads/entities/load.entity';
 @Entity()
 export class Shipper {
   @PrimaryGeneratedColumn()
@@ -21,4 +21,6 @@ export class Shipper {
 
   @Column()
   emergencyContact: string;
+  @OneToMany(() => Load, load => load.shipper)
+  loads: Load[];
 }

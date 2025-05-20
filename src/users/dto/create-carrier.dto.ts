@@ -1,4 +1,4 @@
-import { IsIn, IsString } from 'class-validator';
+import { IsIn, IsString, IsDateString } from 'class-validator';
 import { BaseRegisterDto } from './create-user.dto';
 
 export class CarrierRegisterDto extends BaseRegisterDto {
@@ -9,17 +9,20 @@ export class CarrierRegisterDto extends BaseRegisterDto {
   companyName: string;
 
   @IsString()
-  vehicleType: string;
+  ice: string;
 
   @IsString()
-  maxLoadCapacity: string;
+  rcNumber: string;
 
-  @IsString({ each: true })
-  certifications: string[];
+  @IsDateString()
+  insuranceExpiryDate: Date;
 
   @IsString()
-  serviceAreas: string;
+  transportLicenseNumber: string;
 
   @IsString()
   availabilitySchedule: string;
+
+  @IsString()
+  insurancePolicyNumber: string;
 }

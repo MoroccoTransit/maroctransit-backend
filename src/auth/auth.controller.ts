@@ -23,35 +23,8 @@ export class AuthController {
   ) {}
 
   @Post('register/carrier')
-  @UseInterceptors(
-    FileFieldsInterceptor(
-      [
-        { name: 'vehicleRegistration', maxCount: 1 },
-        { name: 'insuranceDoc', maxCount: 1 },
-        { name: 'driverLicense', maxCount: 1 },
-      ],
-      multerConfig,
-    ),
-  )
-  async registerCarrier(
-    @UploadedFiles()
-    files: {
-      vehicleRegistration?: Express.Multer.File[];
-      insuranceDoc?: Express.Multer.File[];
-      driverLicense?: Express.Multer.File[];
-    },
-    @Body() carrierDto: CarrierRegisterDto,
-  ) {
-    if (!files.vehicleRegistration?.[0] || !files.insuranceDoc?.[0] || !files.driverLicense?.[0]) {
-      throw new BadRequestException('All document files are required');
-    }
-    const filePaths = {
-      vehicleRegistrationPath: files.vehicleRegistration?.[0]?.filename,
-      insuranceDocPath: files.insuranceDoc?.[0]?.filename,
-      driverLicensePath: files.driverLicense?.[0]?.filename,
-    };
-
-    const user = await this.userService.registerCarrier(carrierDto, filePaths);
+  async registerCarrier(@Body() carrierDto: CarrierRegisterDto) {
+    const user = await this.userService.registerCarrier(carrierDto);
     return { message: 'Carrier registered successfully', userId: user.id };
   }
 

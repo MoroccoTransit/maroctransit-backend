@@ -21,14 +21,7 @@ export class UserService {
     private roleService: RolesService,
   ) {}
 
-  async registerCarrier(
-    carrierDto: CarrierRegisterDto,
-    filePaths: {
-      vehicleRegistrationPath: string;
-      insuranceDocPath: string;
-      driverLicensePath: string;
-    },
-  ): Promise<User> {
+  async registerCarrier(carrierDto: CarrierRegisterDto): Promise<User> {
     const existingUser = await this.userRepository.findOne({ where: { email: carrierDto.email } });
     if (existingUser) throw new ConflictException('Email already registered');
 
@@ -46,7 +39,6 @@ export class UserService {
       const savedUser = await manager.save(user);
       const carrier = this.carrierRepository.create({
         ...carrierDto,
-        ...filePaths,
         user: savedUser,
       });
       await manager.save(carrier);
