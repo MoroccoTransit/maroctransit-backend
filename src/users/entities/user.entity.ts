@@ -1,5 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  OneToMany,
+  CreateDateColumn,
+} from 'typeorm';
 import { Role } from '../../roles/entities/role.entity';
+import { PasswordResetToken } from './password-reset-token.entity';
 
 @Entity()
 export class User {
@@ -17,4 +25,10 @@ export class User {
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @Column({ default: false })
+  isActive: boolean;
+
+  @OneToMany(() => PasswordResetToken, token => token.user)
+  passwordResetTokens: PasswordResetToken[];
 }

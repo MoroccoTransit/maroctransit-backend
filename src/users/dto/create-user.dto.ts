@@ -1,21 +1,15 @@
-import { IsEmail, IsString, IsIn, IsNotEmpty } from 'class-validator';
-import { Role } from '../../roles/entities/role.entity';
+import { IsEmail, IsString, IsPhoneNumber } from 'class-validator';
 
-export class CreateUserDto {
+export class BaseRegisterDto {
   @IsEmail()
-  @IsNotEmpty()
   email: string;
 
   @IsString()
-  @IsNotEmpty()
   password: string;
 
-  @IsIn(['admin', 'carrier', 'shipper'], {
-    message: 'Role must be either admin, carrier, or shipper',
-  })
-  @IsNotEmpty()
-  roleName: string;
+  @IsPhoneNumber('MA')
+  phoneNumber: string;
 
-  // This is not part of the input, but will be populated by the service
-  role?: Role;
+  @IsString()
+  address: string;
 }
