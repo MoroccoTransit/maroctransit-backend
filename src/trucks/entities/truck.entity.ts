@@ -6,10 +6,12 @@ import {
   OneToOne,
   CreateDateColumn,
   UpdateDateColumn,
+  JoinColumn,
 } from 'typeorm';
 import { Carrier } from 'src/users/entities/carrier.entity';
 import { TruckType } from '../enums/truck-type.enum';
 import { Driver } from 'src/drivers/entities/driver.entity';
+
 @Entity()
 export class Truck {
   @PrimaryGeneratedColumn('uuid')
@@ -43,8 +45,9 @@ export class Truck {
   @ManyToOne(() => Carrier, carrier => carrier.trucks)
   carrier: Carrier;
 
-  @OneToOne(() => Driver, driver => driver.truck)
-  currentDriver: Driver;
+  @OneToOne(() => Driver, { nullable: true })
+  @JoinColumn()
+  currentDriver: Driver | null;
 
   @Column({
     nullable: true,

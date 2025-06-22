@@ -3,10 +3,15 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class FileUploadService {
-  constructor(private readonly configService: ConfigService) {}
+  private baseUrl: string;
+
+  constructor(private readonly configService: ConfigService) {
+    this.baseUrl = this.configService.get('BASE_URL') || 'http://localhost:3000';
+  }
 
   getFileUrl(filename: string): string {
-    return `${this.configService.get('BASE_URL')}/uploads/${filename}`;
+    if (!filename) return '';
+    return `${this.baseUrl}/uploads/${filename}`;
   }
 
   getFilePath(filename: string): string {
