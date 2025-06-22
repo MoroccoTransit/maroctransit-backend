@@ -13,6 +13,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PasswordResetToken } from 'src/users/entities/password-reset-token.entity';
 import { User } from 'src/users/entities/user.entity';
 import { MailModule } from 'src/shared/mail/mail-upload.service';
+import { RolesGuard } from './guards/roles.gaurd';
 
 @Module({
   imports: [
@@ -31,7 +32,8 @@ import { MailModule } from 'src/shared/mail/mail-upload.service';
       inject: [ConfigService],
     }),
   ],
-  providers: [AuthService, PasswordResetService, LocalStrategy, JwtStrategy],
+  providers: [AuthService, PasswordResetService, LocalStrategy, JwtStrategy, RolesGuard],
   controllers: [AuthController],
+  exports: [RolesGuard],
 })
 export class AuthModule {}

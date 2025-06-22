@@ -10,8 +10,9 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Carrier } from 'src/users/entities/carrier.entity';
-import { Truck } from '../../trucks/entities/truck.entity';
+import { Truck } from 'src/trucks/entities/truck.entity';
 import { Shipment } from '../../shipments/entities/shipment.entity';
+import { User } from 'src/users/entities/user.entity';
 
 @Entity()
 export class Driver {
@@ -42,12 +43,18 @@ export class Driver {
   @Column({ default: true })
   isAvailable: boolean;
 
+  @OneToOne(() => User, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn()
+  user: User;
+
   @ManyToOne(() => Carrier, carrier => carrier.drivers)
   carrier: Carrier;
 
-  @OneToOne(() => Truck, truck => truck.currentDriver)
-  @JoinColumn()
-  truck: Truck;
+  @OneToOne(() => Truck, truck => truck.currentDriver, { nullable: true })
+  assignedTruck: Truck | null;
 
   @OneToMany(() => Shipment, shipment => shipment.driver)
   shipments: Shipment[];
