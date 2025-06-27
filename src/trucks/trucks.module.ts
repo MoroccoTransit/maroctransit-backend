@@ -28,6 +28,6 @@ import { Driver } from 'src/drivers/entities/driver.entity';
   ],
   controllers: [TrucksController],
   providers: [TrucksService],
-  exports: [],
+  exports: [TrucksService],
 })
 export class TrucksModule {}

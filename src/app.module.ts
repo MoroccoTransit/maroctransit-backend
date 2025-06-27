@@ -10,6 +10,7 @@ import { Load } from './loads/entities/load.entity';
 import { LoadsModule } from './loads/loads.module';
 import { BidsModule } from './bids/bids.module';
 import { ShipmentsModule } from './shipments/shipments.module';
+import { GatewaysModule } from './gateways/gateways.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { ShipmentsModule } from './shipments/shipments.module';
     LoadsModule,
     BidsModule,
     ShipmentsModule,
+    GatewaysModule,
   ],
 })
 export class AppModule {}

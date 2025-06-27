@@ -14,6 +14,7 @@ import { PasswordResetToken } from 'src/users/entities/password-reset-token.enti
 import { User } from 'src/users/entities/user.entity';
 import { MailModule } from 'src/shared/mail/mail-upload.service';
 import { RolesGuard } from './guards/roles.gaurd';
+import { WsJwtGuard } from './guards/ws-auth.guard';
 
 @Module({
   imports: [
@@ -32,7 +33,14 @@ import { RolesGuard } from './guards/roles.gaurd';
       inject: [ConfigService],
     }),
   ],
-  providers: [AuthService, PasswordResetService, LocalStrategy, JwtStrategy, RolesGuard],
+  providers: [
+    AuthService,
+    PasswordResetService,
+    LocalStrategy,
+    JwtStrategy,
+    RolesGuard,
+    WsJwtGuard,
+  ],
   controllers: [AuthController],
   exports: [RolesGuard],
 })
