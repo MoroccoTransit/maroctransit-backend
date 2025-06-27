@@ -18,7 +18,7 @@ export const multerConfig = {
     logger.debug(`Processing file: ${file.originalname}, mimetype: ${file.mimetype}`);
 
     // Accept common image formats
-    const allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    const allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
 
     if (allowedMimes.includes(file.mimetype)) {
       logger.debug(`Accepted file: ${file.originalname}`);

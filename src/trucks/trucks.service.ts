@@ -205,4 +205,24 @@ export class TrucksService {
 
     return new TruckResponseDto(updatedTruck);
   }
+
+  async updateTruckLocation(truckId: string, lat: number, lng: number) {
+    const truck = await this.truckRepository.findOne({ where: { id: truckId } });
+    if (!truck) throw new NotFoundException('Truck not found');
+    truck.currentLocation = { lat, lng };
+    await this.truckRepository.save(truck);
+    return truck;
+  }
+
+  async isDriverAssignedToTruck(driverId: string, truckId: string): Promise<boolean> {
+    const truck = await this.truckRepository.findOne({
+      where: { id: truckId },
+      relations: ['currentDriver'],
+    });
+    return !!(truck && truck.currentDriver && String(truck.currentDriver.id) === driverId);
+  }
+
+  async findDriverByUserId(userId: number) {
+    return this.driverRepository.findOne({ where: { user: { id: userId } } });
+  }
 }

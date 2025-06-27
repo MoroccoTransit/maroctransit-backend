@@ -6,6 +6,11 @@ import { UsersModule } from './users/users.module';
 import { RolesModule } from './roles/roles.module';
 import { DriversModule } from './drivers/drivers.module';
 import { TrucksModule } from './trucks/trucks.module';
+import { Load } from './loads/entities/load.entity';
+import { LoadsModule } from './loads/loads.module';
+import { BidsModule } from './bids/bids.module';
+import { ShipmentsModule } from './shipments/shipments.module';
+import { GatewaysModule } from './gateways/gateways.module';
 
 @Module({
   imports: [
@@ -25,6 +30,10 @@ import { TrucksModule } from './trucks/trucks.module';
     RolesModule,
     DriversModule,
     TrucksModule,
+    LoadsModule,
+    BidsModule,
+    ShipmentsModule,
+    GatewaysModule,
   ],
 })
 export class AppModule {}

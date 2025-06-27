@@ -23,6 +23,8 @@ export class Bid {
     enum: BidStatus,
     default: BidStatus.PENDING,
   })
+  status: BidStatus;
+
   @Column({ type: 'timestamp with time zone', comment: 'Morocco/Africa/Casablanca timezone' })
   proposedPickupDate: Date;
 
