@@ -17,12 +17,18 @@ import { GatewaysModule } from './gateways/gateways.module';
     ConfigModule.forRoot(),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        url: config.get('DATABASE_URL'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true,
-      }),
+      useFactory: (config: ConfigService) => {
+        console.log('DATABASE_URL:', config.get('DATABASE_URL'));
+        return {
+          type: 'postgres',
+          url: config.get('DATABASE_URL'),
+          entities: [__dirname + '/**/*.entity{.ts,.js}'],
+          synchronize: true,
+          ssl: {
+            rejectUnauthorized: false,
+          },
+        };
+      },
       inject: [ConfigService],
     }),
     AuthModule,
