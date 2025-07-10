@@ -1,50 +1,79 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Put,
+  Delete,
+  UseGuards,
+  Req,
+  BadRequestException,
+} from '@nestjs/common';
 import { DriversService } from './drivers.service';
 import { CreateDriverDto } from './dto/create-driver.dto';
 import { UpdateDriverDto } from './dto/update-driver.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { CarrierGuard } from 'src/auth/guards/carrier.guard';
-import { RequestWithCarrier } from 'src/auth/interfaces/request-with-carrier.interface';
+import { RolesGuard } from 'src/auth/guards/roles.gaurd';
+import { Roles } from 'src/auth/decorators/roles.decorator';
 import { DriverResponseDto } from './dto/driver-response.dto';
+import { CarrierService } from 'src/users/carrier.service';
+import { User } from 'src/users/entities/user.entity';
+import { Request } from 'express';
+
+interface RequestWithUser extends Request {
+  user: User;
+}
 
 @Controller('drivers')
-@UseGuards(JwtAuthGuard, CarrierGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('carrier')
 export class DriversController {
-  constructor(private readonly driversService: DriversService) {}
+  constructor(
+    private readonly driversService: DriversService,
+    private readonly carrierService: CarrierService,
+  ) {}
 
   @Post()
-  create(
-    @Req() req: RequestWithCarrier,
+  async create(
+    @Req() req: RequestWithUser,
     @Body() createDriverDto: CreateDriverDto,
   ): Promise<DriverResponseDto> {
-    return this.driversService.create(req.carrier.id, createDriverDto);
+    const carrier = await this.carrierService.findByUserId(req.user.id);
+    if (!carrier) throw new BadRequestException('Carrier not found');
+    return this.driversService.create(carrier.id, createDriverDto);
   }
 
   @Get()
-  findAll(@Req() req: RequestWithCarrier): Promise<DriverResponseDto[]> {
-    return this.driversService.findAll(req.carrier.id);
+  async findAll(@Req() req: RequestWithUser): Promise<DriverResponseDto[]> {
+    const carrier = await this.carrierService.findByUserId(req.user.id);
+    if (!carrier) throw new BadRequestException('Carrier not found');
+    return this.driversService.findAll(carrier.id);
   }
 
   @Get(':id')
-  findOne(@Req() req: RequestWithCarrier, @Param('id') id: string): Promise<DriverResponseDto> {
-    return this.driversService.findOneAndFormat(req.carrier.id, id);
+  async findOne(@Req() req: RequestWithUser, @Param('id') id: string): Promise<DriverResponseDto> {
+    const carrier = await this.carrierService.findByUserId(req.user.id);
+    if (!carrier) throw new BadRequestException('Carrier not found');
+    return this.driversService.findOneAndFormat(carrier.id, id);
   }
 
   @Put(':id')
-  update(
-    @Req() req: RequestWithCarrier,
+  async update(
+    @Req() req: RequestWithUser,
     @Param('id') id: string,
     @Body() updateDriverDto: UpdateDriverDto,
   ): Promise<DriverResponseDto> {
-    return this.driversService.update(req.carrier.id, id, updateDriverDto);
+    const carrier = await this.carrierService.findByUserId(req.user.id);
+    if (!carrier) throw new BadRequestException('Carrier not found');
+    return this.driversService.update(carrier.id, id, updateDriverDto);
   }
 
   @Delete(':id')
-  async remove(
-    @Req() req: RequestWithCarrier,
-    @Param('id') id: string,
-  ): Promise<{ message: string }> {
-    await this.driversService.remove(req.carrier.id, id);
+  async remove(@Req() req: RequestWithUser, @Param('id') id: string): Promise<{ message: string }> {
+    const carrier = await this.carrierService.findByUserId(req.user.id);
+    if (!carrier) throw new BadRequestException('Carrier not found');
+    await this.driversService.remove(carrier.id, id);
     return { message: 'Driver deleted successfully' };
   }
 }
