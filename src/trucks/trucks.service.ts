@@ -44,6 +44,9 @@ export class TrucksService {
       order: {
         createdAt: 'DESC',
       },
+      relations: {
+        currentDriver: true,
+      },
     });
 
     return {

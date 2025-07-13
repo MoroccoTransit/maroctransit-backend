@@ -13,6 +13,7 @@ export class TruckResponseDto {
   images: string[];
   createdAt: Date;
   updatedAt: Date;
+  currentDriver?: any;
 
   constructor(truck: any) {
     this.id = truck.id;
@@ -27,5 +28,6 @@ export class TruckResponseDto {
     this.images = truck.images || [];
     this.createdAt = truck.createdAt;
     this.updatedAt = truck.updatedAt;
+    this.currentDriver = truck.currentDriver;
   }
 }
