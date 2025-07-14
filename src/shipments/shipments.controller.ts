@@ -28,4 +28,18 @@ export class ShipmentsController {
   ) {
     return this.shipmentsService.findAllPaginated(Number(req.user.id), page, limit);
   }
+
+  @Get('carrier')
+  @Roles('carrier')
+  async getShipmentsForCarrierAcceptedBids(
+    @Request() req,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
+    return this.shipmentsService.findShipmentsForCarrierAcceptedBids(
+      Number(req.user.id),
+      page,
+      limit,
+    );
+  }
 }
