@@ -56,9 +56,9 @@ export class LoadsController {
 
   // Get details of a specific load
   @Get(':id')
-  @Roles('shipper')
+  @Roles('shipper', 'carrier')
   async findOne(@Param('id') id: string, @Request() req): Promise<any> {
-    return this.loadsService.findOneByUserId(id, req.user.id);
+    return this.loadsService.findOne(id);
   }
 
   // Update a load
@@ -68,15 +68,15 @@ export class LoadsController {
     @Param('id') id: string,
     @Body() updateLoadDto: UpdateLoadDto,
     @Request() req,
-  ): Promise<Load> {
-    return this.loadsService.updateByUserId(id, req.user.id, updateLoadDto);
+  ): Promise<any> {
+    return this.loadsService.updateByUserId(id, updateLoadDto);
   }
 
   // Delete a load
   @Delete(':id')
   @Roles('shipper')
   async remove(@Param('id') id: string, @Request() req): Promise<{ message: string }> {
-    await this.loadsService.removeByUserId(id, req.user.id);
+    await this.loadsService.removeByUserId(id);
     return { message: 'Load deleted successfully' };
   }
 }
