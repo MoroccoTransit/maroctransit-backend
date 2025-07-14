@@ -66,4 +66,20 @@ export class ShipmentsService {
     shipment.driver = driver;
     return this.shipmentRepository.save(shipment);
   }
+
+  async findAllPaginated(shipperUserId: number, page = 1, limit = 10) {
+    const [data, total] = await this.shipmentRepository.findAndCount({
+      where: { load: { shipper: { user: { id: shipperUserId } } } },
+      relations: {
+        driver: { user: true },
+        truck: true,
+        load: true,
+        carrier: true,
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { createdAt: 'DESC' },
+    });
+    return { data, total, page, limit };
+  }
 }

@@ -18,4 +18,14 @@ export class ShipmentsController {
   ) {
     return this.shipmentsService.assignDriver(shipmentId, driverId, Number(req.user.id));
   }
+
+  @Get()
+  @Roles('shipper')
+  async getShipments(
+    @Request() req,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
+    return this.shipmentsService.findAllPaginated(Number(req.user.id), page, limit);
+  }
 }
