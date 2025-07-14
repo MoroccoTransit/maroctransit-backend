@@ -64,13 +64,24 @@ export class LoadsService {
     return { data, total, page, limit };
   }
 
-  async findOneByUserId(id: string, userId: number): Promise<Load> {
+  async findOneByUserId(id: string, userId: number): Promise<any> {
     const shipperId = await this.getShipperIdByUserId(userId);
     const load = await this.loadRepository.findOne({
       where: { id, shipper: { id: shipperId } } as unknown as FindOptionsWhere<Load>,
+      relations: { shipper: { user: true } },
     });
     if (!load) throw new NotFoundException('Load not found');
-    return load;
+    const result = {
+      ...load,
+      shipper: {
+        ...load.shipper,
+        user: {
+          id: load.shipper.user.id,
+          email: load.shipper.user.email,
+        },
+      },
+    };
+    return result;
   }
 
   async updateByUserId(id: string, userId: number, updateLoadDto: UpdateLoadDto): Promise<Load> {

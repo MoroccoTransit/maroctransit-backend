@@ -57,7 +57,7 @@ export class LoadsController {
   // Get details of a specific load
   @Get(':id')
   @Roles('shipper')
-  async findOne(@Param('id') id: string, @Request() req): Promise<Load> {
+  async findOne(@Param('id') id: string, @Request() req): Promise<any> {
     return this.loadsService.findOneByUserId(id, req.user.id);
   }
 
