@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Shipment } from './entities/shipment.entity';
 import { Load } from '../loads/entities/load.entity';
 import { Carrier } from '../users/entities/carrier.entity';
@@ -8,6 +8,7 @@ import { Driver } from '../drivers/entities/driver.entity';
 import { Truck } from '../trucks/entities/truck.entity';
 import { Bid } from '../bids/entities/bid.entity';
 import { ShipmentStatus } from './enums/shipment-status.enum';
+import { BidStatus } from 'src/bids/enums/bid-status.enum';
 
 @Injectable()
 export class ShipmentsService {
@@ -80,6 +81,36 @@ export class ShipmentsService {
       take: limit,
       order: { createdAt: 'DESC' },
     });
+    return { data, total, page, limit };
+  }
+  async findShipmentsForCarrierAcceptedBids(carrierUserId: number, page = 1, limit = 10) {
+    const acceptedBids = await this.bidRepository.find({
+      where: {
+        carrier: { user: { id: carrierUserId } },
+        status: BidStatus.ACCEPTED,
+      },
+      relations: { load: true },
+    });
+
+    const loadIds = acceptedBids.map(bid => bid.load.id);
+
+    if (loadIds.length === 0) {
+      return { data: [], total: 0, page, limit };
+    }
+
+    const [data, total] = await this.shipmentRepository.findAndCount({
+      where: { load: { id: In(loadIds) } },
+      relations: {
+        driver: { user: true },
+        truck: true,
+        load: true,
+        carrier: { user: true },
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { createdAt: 'DESC' },
+    });
+
     return { data, total, page, limit };
   }
 }
