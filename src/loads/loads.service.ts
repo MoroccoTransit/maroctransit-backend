@@ -64,23 +64,35 @@ export class LoadsService {
     return { data, total, page, limit };
   }
 
-  async findOneByUserId(id: string, userId: number): Promise<Load> {
-    const shipperId = await this.getShipperIdByUserId(userId);
+  async findOne(id: string): Promise<any> {
     const load = await this.loadRepository.findOne({
-      where: { id, shipper: { id: shipperId } } as unknown as FindOptionsWhere<Load>,
+      where: { id } as unknown as FindOptionsWhere<Load>,
+      relations: {
+        shipper: { user: true },
+      },
     });
     if (!load) throw new NotFoundException('Load not found');
-    return load;
+    const result = {
+      ...load,
+      shipper: {
+        ...load.shipper,
+        user: {
+          id: load.shipper.user.id,
+          email: load.shipper.user.email,
+        },
+      },
+    };
+    return result;
   }
 
-  async updateByUserId(id: string, userId: number, updateLoadDto: UpdateLoadDto): Promise<Load> {
-    const load = await this.findOneByUserId(id, userId);
+  async updateByUserId(id: string, updateLoadDto: UpdateLoadDto): Promise<any> {
+    const load = await this.findOne(id);
     Object.assign(load, updateLoadDto);
     return this.loadRepository.save(load);
   }
 
-  async removeByUserId(id: string, userId: number): Promise<void> {
-    const load = await this.findOneByUserId(id, userId);
+  async removeByUserId(id: string): Promise<void> {
+    const load = await this.findOne(id);
     await this.loadRepository.remove(load);
   }
 }
