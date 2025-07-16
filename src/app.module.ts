@@ -11,6 +11,7 @@ import { LoadsModule } from './loads/loads.module';
 import { BidsModule } from './bids/bids.module';
 import { ShipmentsModule } from './shipments/shipments.module';
 import { GatewaysModule } from './gateways/gateways.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { GatewaysModule } from './gateways/gateways.module';
       }),
       inject: [ConfigService],
     }),
+    ScheduleModule.forRoot(),
     AuthModule,
     UsersModule,
     RolesModule,
