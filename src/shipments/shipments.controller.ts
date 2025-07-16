@@ -1,8 +1,20 @@
-import { Controller, Patch, Param, Body, UseGuards, Request, Get, Query } from '@nestjs/common';
+import {
+  Controller,
+  Patch,
+  Param,
+  Body,
+  UseGuards,
+  Request,
+  Get,
+  Query,
+  BadRequestException,
+} from '@nestjs/common';
 import { ShipmentsService } from './shipments.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.gaurd';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { UpdateShipmentStatusDto } from './entities/update-shipment-status.dto';
+import { ShipmentStatus } from './enums/shipment-status.enum';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('shipments')
@@ -41,5 +53,17 @@ export class ShipmentsController {
       page,
       limit,
     );
+  }
+
+  @Patch(':id/start')
+  @Roles('driver')
+  async startShipment(@Param('id') shipmentId: string, @Request() req) {
+    return this.shipmentsService.startShipment(shipmentId, req.user.id);
+  }
+
+  @Patch(':id/deliver')
+  @Roles('driver')
+  async markAsDelivered(@Param('id') shipmentId: string, @Request() req) {
+    return this.shipmentsService.markAsDelivered(shipmentId, req.user.id);
   }
 }

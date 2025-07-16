@@ -7,6 +7,7 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  Index,
 } from 'typeorm';
 import { Carrier } from 'src/users/entities/carrier.entity';
 import { ShipmentStatus } from '../enums/shipment-status.enum';
@@ -34,6 +35,9 @@ export class Shipment {
 
   @Column({ type: 'timestamp', nullable: true })
   actualDeliveryDate: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  actualStartDate: Date;
 
   @OneToOne(() => Load)
   @JoinColumn()

@@ -1,4 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Shipment } from './entities/shipment.entity';
@@ -112,5 +117,64 @@ export class ShipmentsService {
     });
 
     return { data, total, page, limit };
+  }
+
+  async startShipment(shipmentId: string, userId: number) {
+    const shipment = await this.shipmentRepository.findOne({
+      where: { id: shipmentId },
+      relations: ['driver', 'driver.user'],
+    });
+
+    if (!shipment) {
+      throw new NotFoundException('Shipment not found');
+    }
+
+    if (!shipment.driver || shipment.driver.user.id !== userId) {
+      throw new ForbiddenException('You must be the assigned driver to start this shipment');
+    }
+
+    if (shipment.status !== ShipmentStatus.SCHEDULED) {
+      throw new BadRequestException(
+        `Shipment must be in SCHEDULED status to start. Current status: ${shipment.status}`,
+      );
+    }
+
+    shipment.status = ShipmentStatus.IN_TRANSIT;
+    shipment.actualStartDate = new Date();
+    return this.shipmentRepository.save(shipment);
+  }
+
+  async markAsDelivered(shipmentId: string, userId: number) {
+    const shipment = await this.shipmentRepository.findOne({
+      where: { id: shipmentId },
+      relations: ['driver', 'driver.user', 'load'],
+    });
+
+    if (!shipment) {
+      throw new NotFoundException('Shipment not found');
+    }
+
+    if (!shipment.driver || shipment.driver.user.id !== userId) {
+      throw new ForbiddenException('Only assigned driver can mark shipment as delivered');
+    }
+
+    const allowedStatuses = [
+      ShipmentStatus.IN_TRANSIT,
+      ShipmentStatus.DELAYED,
+      ShipmentStatus.SCHEDULED,
+    ];
+
+    if (!allowedStatuses.includes(shipment.status)) {
+      throw new BadRequestException(
+        `Cannot mark shipment as delivered from current status: ${shipment.status}`,
+      );
+    }
+
+    shipment.status = ShipmentStatus.DELIVERED;
+    shipment.actualDeliveryDate = new Date();
+
+    const result = await this.shipmentRepository.save(shipment);
+
+    return result;
   }
 }
