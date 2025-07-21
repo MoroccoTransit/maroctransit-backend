@@ -5,6 +5,7 @@ import {
   ManyToOne,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToOne,
 } from 'typeorm';
 import { Load } from 'src/loads/entities/load.entity';
 import { Truck } from 'src/trucks/entities/truck.entity';
@@ -31,6 +32,9 @@ export class Bid {
   @Column({ type: 'timestamp with time zone' })
   proposedDeliveryDate: Date;
 
+  @Column({ type: 'text', nullable: true })
+  notes: string;
+
   @ManyToOne(() => Load, load => load.bids)
   load: Load;
 
@@ -39,6 +43,9 @@ export class Bid {
 
   @ManyToOne(() => Truck)
   truck: Truck;
+
+  @OneToOne(() => Load, load => load.acceptedBid)
+  acceptedForLoad: Load;
 
   @CreateDateColumn()
   createdAt: Date;

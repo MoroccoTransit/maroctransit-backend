@@ -6,6 +6,7 @@ import {
   Param,
   Put,
   Delete,
+  Query,
   UseGuards,
   Req,
   BadRequestException,
@@ -13,11 +14,13 @@ import {
 import { DriversService } from './drivers.service';
 import { CreateDriverDto } from './dto/create-driver.dto';
 import { UpdateDriverDto } from './dto/update-driver.dto';
+import { UpdateDriverStatusDto } from './dto/update-driver-status.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.gaurd';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { DriverResponseDto } from './dto/driver-response.dto';
 import { CarrierService } from 'src/users/carrier.service';
+import { PaginationDto } from 'src/shared/dto/pagination.dto';
 import { User } from 'src/users/entities/user.entity';
 import { Request } from 'express';
 
@@ -45,10 +48,17 @@ export class DriversController {
   }
 
   @Get()
-  async findAll(@Req() req: RequestWithUser): Promise<DriverResponseDto[]> {
+  async findAll(@Req() req: RequestWithUser, @Query() paginationDto: PaginationDto) {
     const carrier = await this.carrierService.findByUserId(req.user.id);
     if (!carrier) throw new BadRequestException('Carrier not found');
-    return this.driversService.findAll(carrier.id);
+    return this.driversService.findAllPaginated(carrier.id, paginationDto);
+  }
+
+  @Get('available')
+  async findAvailable(@Req() req: RequestWithUser): Promise<DriverResponseDto[]> {
+    const carrier = await this.carrierService.findByUserId(req.user.id);
+    if (!carrier) throw new BadRequestException('Carrier not found');
+    return this.driversService.findAvailable(carrier.id);
   }
 
   @Get(':id')
@@ -67,6 +77,17 @@ export class DriversController {
     const carrier = await this.carrierService.findByUserId(req.user.id);
     if (!carrier) throw new BadRequestException('Carrier not found');
     return this.driversService.update(carrier.id, id, updateDriverDto);
+  }
+
+  @Put(':id/status')
+  async updateStatus(
+    @Req() req: RequestWithUser,
+    @Param('id') id: string,
+    @Body() updateDriverStatusDto: UpdateDriverStatusDto,
+  ): Promise<DriverResponseDto> {
+    const carrier = await this.carrierService.findByUserId(req.user.id);
+    if (!carrier) throw new BadRequestException('Carrier not found');
+    return this.driversService.updateStatus(carrier.id, id, updateDriverStatusDto);
   }
 
   @Delete(':id')

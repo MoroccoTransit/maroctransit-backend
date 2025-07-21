@@ -9,8 +9,11 @@ import { Carrier } from '../users/entities/carrier.entity';
 import { Role } from '../roles/entities/role.entity';
 import { CreateDriverDto } from './dto/create-driver.dto';
 import { UpdateDriverDto } from './dto/update-driver.dto';
+import { UpdateDriverStatusDto } from './dto/update-driver-status.dto';
 import { DriverResponseDto } from './dto/driver-response.dto';
 import { UserService } from 'src/users/users.service';
+import { PaginationDto } from 'src/shared/dto/pagination.dto';
+import { DriverStatus } from './enums/driver-status.enum';
 
 @Injectable()
 export class DriversService {
@@ -67,6 +70,31 @@ export class DriversService {
     return drivers.map(driver => new DriverResponseDto(driver));
   }
 
+  async findAllPaginated(carrierId: number, paginationDto: PaginationDto) {
+    const { page = 1, limit = 10 } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const [drivers, total] = await this.driverRepository.findAndCount({
+      where: { carrier: { id: carrierId } },
+      relations: ['user'],
+      skip,
+      take: limit,
+      order: {
+        joinedAt: 'DESC',
+      },
+    });
+
+    const items = drivers.map(driver => new DriverResponseDto(driver));
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
   async findOne(carrierId: number, id: string): Promise<Driver> {
     const driver = await this.driverRepository.findOne({
       where: { id, carrier: { id: carrierId } },
@@ -79,6 +107,17 @@ export class DriversService {
   async findOneAndFormat(carrierId: number, id: string): Promise<DriverResponseDto> {
     const driver = await this.findOne(carrierId, id);
     return new DriverResponseDto(driver);
+  }
+
+  async findAvailable(carrierId: number): Promise<DriverResponseDto[]> {
+    const drivers = await this.driverRepository.find({
+      where: {
+        carrier: { id: carrierId },
+        status: DriverStatus.AVAILABLE,
+      },
+      relations: ['user'],
+    });
+    return drivers.map(driver => new DriverResponseDto(driver));
   }
 
   async update(
@@ -105,6 +144,19 @@ export class DriversService {
     Object.assign(driver, updateDriverDto);
 
     await this.userRepository.save(driver.user);
+    const savedDriver = await this.driverRepository.save(driver);
+    return new DriverResponseDto(savedDriver);
+  }
+
+  async updateStatus(
+    carrierId: number,
+    id: string,
+    updateDriverStatusDto: UpdateDriverStatusDto,
+  ): Promise<DriverResponseDto> {
+    const driver = await this.findOne(carrierId, id);
+
+    driver.status = updateDriverStatusDto.status;
+
     const savedDriver = await this.driverRepository.save(driver);
     return new DriverResponseDto(savedDriver);
   }

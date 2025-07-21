@@ -1,6 +1,7 @@
-import { IsEnum, IsNumber, IsNotEmpty, IsISO8601 } from 'class-validator';
+import { IsEnum, IsNumber, IsNotEmpty, IsISO8601, IsOptional } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { TruckType } from '../enums/truck-type.enum';
+import { TruckStatus } from '../enums/truck-status.enum';
 
 export class CreateTruckDto {
   @IsNotEmpty()
@@ -24,6 +25,10 @@ export class CreateTruckDto {
     return value;
   })
   insuranceExpiryDate: string;
+
+  @IsOptional()
+  @IsEnum(TruckStatus)
+  status?: TruckStatus;
 
   @Transform(({ value }) => {
     if (typeof value === 'string') {

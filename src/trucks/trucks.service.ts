@@ -1,12 +1,18 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Truck } from './entities/truck.entity';
 import { Driver } from '../drivers/entities/driver.entity';
 import { Carrier } from 'src/users/entities/carrier.entity';
 import { CreateTruckDto } from './dto/create-truck.dto';
 import { UpdateTruckDto } from './dto/update-truck.dto';
 import { TruckResponseDto } from './dto/truck-response.dto';
+import { TruckStatus } from './enums/truck-status.enum';
 import { PaginationDto } from 'src/shared/dto/pagination.dto';
 
 @Injectable()
@@ -27,7 +33,7 @@ export class TrucksService {
     const truck = this.truckRepository.create({
       ...createTruckDto,
       carrier,
-      isAvailable: true,
+      status: createTruckDto.status || TruckStatus.AVAILABLE,
       primaryImage: primaryImageUrl,
       images: imageUrls,
     });
@@ -36,9 +42,20 @@ export class TrucksService {
     return new TruckResponseDto(savedTruck);
   }
 
-  async findTrucksByCarrier(carrierId: number, paginationDto: PaginationDto) {
+  async findTrucksByCarrier(
+    carrierId: number,
+    paginationDto: PaginationDto,
+    statusFilter?: TruckStatus[],
+  ) {
+    const whereCondition: any = { carrier: { id: carrierId } };
+
+    // Add status filter if provided
+    if (statusFilter && statusFilter.length > 0) {
+      whereCondition.status = In(statusFilter);
+    }
+
     const [trucks, total] = await this.truckRepository.findAndCount({
-      where: { carrier: { id: carrierId } },
+      where: whereCondition,
       skip: (paginationDto.page - 1) * paginationDto.limit,
       take: paginationDto.limit,
       order: {
@@ -56,6 +73,7 @@ export class TrucksService {
         page: paginationDto.page,
         limit: paginationDto.limit,
         totalPages: Math.ceil(total / paginationDto.limit),
+        statusFilter: statusFilter || null,
       },
     };
   }
@@ -150,16 +168,11 @@ export class TrucksService {
     }
 
     truck.currentDriver = driver;
-    truck.isAvailable = false;
-
     const savedTruck = await this.truckRepository.save(truck);
 
-    // Update driver's availability
-    driver.isAvailable = false;
     driver.assignedTruck = savedTruck;
     await this.driverRepository.save(driver);
 
-    // Fetch the updated truck with all relations
     const updatedTruck = await this.truckRepository.findOne({
       where: { id: truckId },
       relations: ['currentDriver', 'carrier'],
@@ -190,17 +203,12 @@ export class TrucksService {
       throw new NotFoundException('Driver not found');
     }
 
-    // Update driver's availability and remove truck assignment
-    driver.isAvailable = true;
     driver.assignedTruck = null;
     await this.driverRepository.save(driver);
 
-    // Update truck's availability and remove driver assignment
     truck.currentDriver = null;
-    truck.isAvailable = true;
     const savedTruck = await this.truckRepository.save(truck);
 
-    // Fetch the updated truck with all relations
     const updatedTruck = await this.truckRepository.findOne({
       where: { id: truckId },
       relations: ['carrier'],
@@ -227,5 +235,25 @@ export class TrucksService {
 
   async findDriverByUserId(userId: number) {
     return this.driverRepository.findOne({ where: { user: { id: userId } } });
+  }
+
+  async updateTruckStatus(
+    truckId: string,
+    carrierId: number,
+    newStatus: TruckStatus,
+  ): Promise<TruckResponseDto> {
+    const truck = await this.truckRepository.findOne({
+      where: { id: truckId, carrier: { id: carrierId } },
+      relations: ['currentDriver'],
+    });
+
+    if (!truck) {
+      throw new NotFoundException('Truck not found');
+    }
+
+    truck.status = newStatus;
+    const savedTruck = await this.truckRepository.save(truck);
+
+    return new TruckResponseDto(savedTruck);
   }
 }

@@ -6,6 +6,9 @@ export class LocationDto {
   @IsString()
   address: string;
 
+  @IsString()
+  city: string;
+
   @ValidateNested()
   @Type(() => CoordinatesDto)
   @IsObject()

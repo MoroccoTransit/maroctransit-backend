@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { Carrier } from 'src/users/entities/carrier.entity';
 import { TruckType } from '../enums/truck-type.enum';
+import { TruckStatus } from '../enums/truck-status.enum';
 import { Driver } from 'src/drivers/entities/driver.entity';
 
 @Entity()
@@ -39,13 +40,18 @@ export class Truck {
   })
   currentLocation: { lat: number; lng: number };
 
-  @Column({ default: true })
-  isAvailable: boolean;
+  @Column({
+    type: 'enum',
+    enum: TruckStatus,
+    default: TruckStatus.AVAILABLE,
+    comment: 'Current operational status of the truck',
+  })
+  status: TruckStatus;
 
   @ManyToOne(() => Carrier, carrier => carrier.trucks)
   carrier: Carrier;
 
-  @OneToOne(() => Driver, { nullable: true })
+  @OneToOne(() => Driver, driver => driver.assignedTruck, { nullable: true })
   @JoinColumn()
   currentDriver: Driver | null;
 
@@ -61,6 +67,14 @@ export class Truck {
     comment: 'Array of image URLs (side, rear, cargo area, etc.)',
   })
   images: string[];
+
+  @Column('jsonb', { default: [] })
+  commitments: {
+    start: Date;
+    end: Date;
+    loadId: string;
+    bidId: string;
+  }[];
 
   @CreateDateColumn()
   createdAt: Date;

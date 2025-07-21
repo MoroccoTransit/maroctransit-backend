@@ -11,6 +11,7 @@ import { LoadsModule } from './loads/loads.module';
 import { BidsModule } from './bids/bids.module';
 import { ShipmentsModule } from './shipments/shipments.module';
 import { GatewaysModule } from './gateways/gateways.module';
+import { TrackingModule } from './tracking/tracking.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
@@ -36,6 +37,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     BidsModule,
     ShipmentsModule,
     GatewaysModule,
+    TrackingModule,
   ],
 })
 export class AppModule {}

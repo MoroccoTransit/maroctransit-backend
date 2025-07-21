@@ -4,6 +4,7 @@ import {
   Post,
   Get,
   Put,
+  Patch,
   Delete,
   Param,
   Req,
@@ -19,6 +20,8 @@ import { TrucksService } from './trucks.service';
 import { CarrierService } from 'src/users/carrier.service';
 import { CreateTruckDto } from './dto/create-truck.dto';
 import { UpdateTruckDto } from './dto/update-truck.dto';
+import { TruckFilterDto } from './dto/truck-filter.dto';
+import { TruckStatus } from './enums/truck-status.enum';
 import { Express, Request } from 'express';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { multerConfig } from 'src/shared/file-upload/config/multer.config';
@@ -90,13 +93,17 @@ export class TrucksController {
   }
 
   @Get()
-  async getTrucks(@Query() paginationDto: PaginationDto, @Req() req: RequestWithUser) {
+  async getTrucks(
+    @Query() paginationDto: PaginationDto,
+    @Query() filterDto: TruckFilterDto,
+    @Req() req: RequestWithUser,
+  ) {
     const carrier = await this.carrierService.findByUserId(req.user.id);
     if (!carrier) {
       throw new BadRequestException('Carrier not found');
     }
 
-    return this.trucksService.findTrucksByCarrier(carrier.id, paginationDto);
+    return this.trucksService.findTrucksByCarrier(carrier.id, paginationDto, filterDto.status);
   }
 
   @Get(':id')
@@ -156,5 +163,25 @@ export class TrucksController {
     }
 
     return this.trucksService.unassignDriver(id, carrier.id);
+  }
+
+  @Patch(':id/status/:status')
+  async updateTruckStatus(
+    @Param('id') id: string,
+    @Param('status') status: string,
+    @Req() req: RequestWithUser,
+  ) {
+    const carrier = await this.carrierService.findByUserId(req.user.id);
+    if (!carrier) {
+      throw new BadRequestException('Carrier not found');
+    }
+
+    if (!['available', 'in_maintenance'].includes(status)) {
+      throw new BadRequestException('Status must be either "available" or "in_maintenance"');
+    }
+
+    const truckStatus = status === 'available' ? TruckStatus.AVAILABLE : TruckStatus.IN_MAINTENANCE;
+
+    return this.trucksService.updateTruckStatus(id, carrier.id, truckStatus);
   }
 }
