@@ -15,7 +15,7 @@ export class CarrierRegisterDto extends BaseRegisterDto {
   rcNumber: string;
 
   @IsDateString()
-  insuranceExpiryDate: Date;
+  insuranceExpiryDate: string;
 
   @IsString()
   transportLicenseNumber: string;
