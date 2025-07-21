@@ -176,7 +176,7 @@ export class TrucksController {
       throw new BadRequestException('Carrier not found');
     }
 
-    if (!['available', 'in_maintenance'].includes(status)) {
+    if (!['available', 'in_maintenance', 'out_of_service'].includes(status)) {
       throw new BadRequestException('Status must be either "available" or "in_maintenance"');
     }
 
