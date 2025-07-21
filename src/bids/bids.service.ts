@@ -37,7 +37,7 @@ export class BidsService {
 
   async createBid(loadId: string, userId: number, createBidDto: CreateBidDto): Promise<Bid> {
     const load = await this.loadRepository.findOne({
-      where: { id: loadId, status: LoadStatus.PENDING },
+      where: { id: loadId, status: LoadStatus.PUBLISHED },
     });
     if (!load) throw new NotFoundException('Load not found or not available for bidding');
 
