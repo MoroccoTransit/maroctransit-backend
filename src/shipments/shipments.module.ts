@@ -9,9 +9,13 @@ import { Truck } from '../trucks/entities/truck.entity';
 import { Bid } from '../bids/entities/bid.entity';
 import { ShipmentsController } from './shipments.controller';
 import { ShipmentTasksService } from './shipment-tasks.service';
+import { TrackingModule } from 'src/tracking/tracking.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Shipment, Load, Carrier, Driver, Truck, Bid])],
+  imports: [
+    TypeOrmModule.forFeature([Shipment, Load, Carrier, Driver, Truck, Bid]),
+    TrackingModule,
+  ],
   controllers: [ShipmentsController],
   providers: [ShipmentsService, ShipmentTasksService],
   exports: [ShipmentsService],
