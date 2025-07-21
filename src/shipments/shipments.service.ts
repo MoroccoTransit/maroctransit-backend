@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, Repository, Not } from 'typeorm';
 import { Shipment } from './entities/shipment.entity';
 import { Load } from '../loads/entities/load.entity';
 import { Carrier } from '../users/entities/carrier.entity';
@@ -14,6 +14,8 @@ import { Truck } from '../trucks/entities/truck.entity';
 import { Bid } from '../bids/entities/bid.entity';
 import { ShipmentStatus } from './enums/shipment-status.enum';
 import { BidStatus } from 'src/bids/enums/bid-status.enum';
+import { LoadStatus } from '../loads/enums/load-status.enum';
+import { DriverStatus } from '../drivers/enums/driver-status.enum';
 
 @Injectable()
 export class ShipmentsService {
@@ -38,9 +40,13 @@ export class ShipmentsService {
     if (!load) throw new Error('Load not found');
     const carrier = await this.carrierRepository.findOne({ where: { id: bid.carrier.id } });
     if (!carrier) throw new Error('Carrier not found');
-    const truck = await this.truckRepository.findOne({ where: { id: bid.truck.id } });
+    const truck = await this.truckRepository.findOne({
+      where: { id: bid.truck.id },
+      relations: {
+        currentDriver: true,
+      },
+    });
     if (!truck) throw new Error('Truck not found');
-    // Optionally assign a driver here if needed
     const shipment = this.shipmentRepository.create({
       load,
       carrier,
@@ -54,22 +60,40 @@ export class ShipmentsService {
   }
 
   async assignDriver(shipmentId: string, driverId: string, carrierUserId: number) {
-    // Find the shipment and ensure it belongs to the carrier
     const shipment = await this.shipmentRepository.findOne({
       where: { id: shipmentId },
       relations: ['carrier', 'carrier.user', 'driver'],
     });
-    if (!shipment) throw new Error('Shipment not found');
-    // Find the carrier by userId
-    if (!shipment.carrier) throw new Error('Shipment has no carrier');
-    if (shipment.carrier.user.id !== carrierUserId)
-      throw new Error('Unauthorized: Carrier does not own this shipment');
-    // Find the driver and ensure it belongs to the carrier
+    if (!shipment) throw new NotFoundException('Shipment not found');
+
     const driver = await this.driverRepository.findOne({
       where: { id: driverId, carrier: { id: shipment.carrier.id } },
     });
-    if (!driver) throw new Error('Driver not found or does not belong to carrier');
+    if (!driver) throw new NotFoundException('Driver not found or does not belong to carrier');
+
+    const shipments = await this.shipmentRepository.find({
+      where: {
+        driver: { id: driverId },
+        status: In([ShipmentStatus.SCHEDULED, ShipmentStatus.IN_TRANSIT]),
+      },
+    });
+
+    const newStart = new Date(shipment.startDate);
+    const newEnd = new Date(shipment.estimatedDeliveryDate);
+    for (const existingShipment of shipments) {
+      const existingStart = new Date(existingShipment.startDate);
+      const existingEnd = new Date(existingShipment.estimatedDeliveryDate);
+
+      if (newStart < existingEnd && newEnd > existingStart) {
+        throw new BadRequestException(
+          `Driver already has an overlapping shipment scheduled from ${existingStart.toDateString()} to ${existingEnd.toDateString()}`,
+        );
+      }
+    }
+
     shipment.driver = driver;
+    driver.status = DriverStatus.ASSIGNED;
+    await this.driverRepository.save(driver);
     return this.shipmentRepository.save(shipment);
   }
 
@@ -141,6 +165,11 @@ export class ShipmentsService {
 
     shipment.status = ShipmentStatus.IN_TRANSIT;
     shipment.actualStartDate = new Date();
+
+    // Update driver status to IN_TRANSIT
+    shipment.driver.status = DriverStatus.IN_TRANSIT;
+    await this.driverRepository.save(shipment.driver);
+
     return this.shipmentRepository.save(shipment);
   }
 
@@ -170,8 +199,23 @@ export class ShipmentsService {
       );
     }
 
+    // Update shipment status
     shipment.status = ShipmentStatus.DELIVERED;
     shipment.actualDeliveryDate = new Date();
+
+    // Update driver status back to AVAILABLE (or ASSIGNED if they have other scheduled shipments)
+    const hasOtherScheduledShipments = await this.shipmentRepository.count({
+      where: {
+        driver: { id: shipment.driver.id },
+        status: ShipmentStatus.SCHEDULED,
+        id: Not(shipmentId),
+      },
+    });
+
+    shipment.driver.status =
+      hasOtherScheduledShipments > 0 ? DriverStatus.ASSIGNED : DriverStatus.AVAILABLE;
+
+    await this.driverRepository.save(shipment.driver);
 
     const result = await this.shipmentRepository.save(shipment);
 

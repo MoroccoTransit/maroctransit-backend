@@ -1,3 +1,5 @@
+import { DriverStatus } from '../enums/driver-status.enum';
+
 export class DriverResponseDto {
   id: string;
   firstName: string;
@@ -8,7 +10,7 @@ export class DriverResponseDto {
   address: string;
   licenseNumber: string;
   licenseExpiryDate: Date;
-  isAvailable: boolean;
+  status: DriverStatus;
   joinedAt: Date;
   lastUpdatedAt: Date;
 
@@ -22,7 +24,7 @@ export class DriverResponseDto {
     this.address = driver.address;
     this.licenseNumber = driver.licenseNumber;
     this.licenseExpiryDate = driver.licenseExpiryDate;
-    this.isAvailable = driver.isAvailable;
+    this.status = driver.status;
     this.joinedAt = driver.joinedAt;
     this.lastUpdatedAt = driver.lastUpdatedAt;
   }

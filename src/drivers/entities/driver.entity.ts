@@ -13,6 +13,7 @@ import { Carrier } from 'src/users/entities/carrier.entity';
 import { Truck } from 'src/trucks/entities/truck.entity';
 import { Shipment } from '../../shipments/entities/shipment.entity';
 import { User } from 'src/users/entities/user.entity';
+import { DriverStatus } from '../enums/driver-status.enum';
 
 @Entity()
 export class Driver {
@@ -40,8 +41,13 @@ export class Driver {
   @Column({ type: 'date' })
   licenseExpiryDate: Date;
 
-  @Column({ default: true })
-  isAvailable: boolean;
+  @Column({
+    type: 'enum',
+    enum: DriverStatus,
+    default: DriverStatus.AVAILABLE,
+    comment: 'Current availability status of the driver',
+  })
+  status: DriverStatus;
 
   @OneToOne(() => User, {
     cascade: true,

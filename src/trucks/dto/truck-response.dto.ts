@@ -1,4 +1,5 @@
 import { TruckType } from '../enums/truck-type.enum';
+import { TruckStatus } from '../enums/truck-status.enum';
 
 export class TruckResponseDto {
   id: string;
@@ -8,7 +9,7 @@ export class TruckResponseDto {
   carteGriseNumber: string;
   insuranceExpiryDate: Date;
   currentLocation: { lat: number; lng: number };
-  isAvailable: boolean;
+  status: TruckStatus;
   primaryImage: string;
   images: string[];
   createdAt: Date;
@@ -23,7 +24,7 @@ export class TruckResponseDto {
     this.carteGriseNumber = truck.carteGriseNumber;
     this.insuranceExpiryDate = truck.insuranceExpiryDate;
     this.currentLocation = truck.currentLocation;
-    this.isAvailable = truck.isAvailable;
+    this.status = truck.status;
     this.primaryImage = truck.primaryImage;
     this.images = truck.images || [];
     this.createdAt = truck.createdAt;
