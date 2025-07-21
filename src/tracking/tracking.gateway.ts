@@ -297,6 +297,7 @@ export class TrackingGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   // Method to emit status changes
   emitShipmentStatusChange(shipmentId: string, newStatus: string, additionalData?: any) {
+    console.log(`Emitting status change for shipment ${shipmentId} to ${newStatus}`);
     this.server.to(`shipment:${shipmentId}`).emit('statusChanged', {
       shipmentId,
       newStatus,

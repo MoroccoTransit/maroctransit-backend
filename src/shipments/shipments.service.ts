@@ -16,6 +16,7 @@ import { ShipmentStatus } from './enums/shipment-status.enum';
 import { BidStatus } from 'src/bids/enums/bid-status.enum';
 import { LoadStatus } from '../loads/enums/load-status.enum';
 import { DriverStatus } from '../drivers/enums/driver-status.enum';
+import { TrackingGateway } from 'src/tracking/tracking.gateway';
 
 @Injectable()
 export class ShipmentsService {
@@ -32,6 +33,8 @@ export class ShipmentsService {
     private readonly truckRepository: Repository<Truck>,
     @InjectRepository(Bid)
     private readonly bidRepository: Repository<Bid>,
+
+    private readonly trackingGateway: TrackingGateway,
   ) {}
 
   async createShipmentFromBid(bid: Bid): Promise<Shipment> {
@@ -169,7 +172,7 @@ export class ShipmentsService {
     // Update driver status to IN_TRANSIT
     shipment.driver.status = DriverStatus.IN_TRANSIT;
     await this.driverRepository.save(shipment.driver);
-
+    this.trackingGateway.emitShipmentStatusChange(shipmentId, ShipmentStatus.IN_TRANSIT);
     return this.shipmentRepository.save(shipment);
   }
 
@@ -218,6 +221,10 @@ export class ShipmentsService {
     await this.driverRepository.save(shipment.driver);
 
     const result = await this.shipmentRepository.save(shipment);
+
+    this.trackingGateway.emitShipmentStatusChange(shipmentId, ShipmentStatus.DELIVERED, {
+      actualDeliveryDate: shipment.actualDeliveryDate,
+    });
 
     return result;
   }
