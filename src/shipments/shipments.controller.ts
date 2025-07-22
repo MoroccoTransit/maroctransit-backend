@@ -53,6 +53,16 @@ export class ShipmentsController {
     );
   }
 
+  @Get('driver')
+  @Roles('driver')
+  async getShipmentsForDriver(
+    @Request() req,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
+    return this.shipmentsService.findShipmentsForDriver(Number(req.user.id), page, limit);
+  }
+
   @Patch(':id/start')
   @Roles('driver')
   async startShipment(@Param('id') shipmentId: string, @Request() req) {

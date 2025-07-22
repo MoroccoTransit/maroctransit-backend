@@ -16,7 +16,7 @@ import { ShipmentStatus } from './enums/shipment-status.enum';
 import { BidStatus } from 'src/bids/enums/bid-status.enum';
 import { LoadStatus } from '../loads/enums/load-status.enum';
 import { DriverStatus } from '../drivers/enums/driver-status.enum';
-import { TrackingGateway } from 'src/tracking/tracking.gateway';
+import { TrackingGateway } from '../tracking/tracking.gateway';
 
 @Injectable()
 export class ShipmentsService {
@@ -142,6 +142,38 @@ export class ShipmentsService {
       take: limit,
       order: { createdAt: 'DESC' },
     });
+
+    return { data, total, page, limit };
+  }
+
+  async findShipmentsForDriver(driverUserId: number, page = 1, limit = 10) {
+    // First, find the driver entity from the user ID
+    const driver = await this.driverRepository.findOne({
+      where: { user: { id: driverUserId } },
+      relations: ['user'],
+    });
+
+    if (!driver) {
+      throw new NotFoundException('Driver not found for this user');
+    }
+
+    // Use query builder to avoid relations issues
+    const queryBuilder = this.shipmentRepository
+      .createQueryBuilder('shipment')
+      .leftJoinAndSelect('shipment.driver', 'driver')
+      .leftJoinAndSelect('driver.user', 'driverUser')
+      .leftJoinAndSelect('shipment.truck', 'truck')
+      .leftJoinAndSelect('shipment.load', 'load')
+      .leftJoinAndSelect('load.shipper', 'shipper')
+      .leftJoinAndSelect('shipper.user', 'shipperUser')
+      .leftJoinAndSelect('shipment.carrier', 'carrier')
+      .leftJoinAndSelect('carrier.user', 'carrierUser')
+      .where('shipment.driver.id = :driverId', { driverId: driver.id })
+      .orderBy('shipment.createdAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [data, total] = await queryBuilder.getManyAndCount();
 
     return { data, total, page, limit };
   }
