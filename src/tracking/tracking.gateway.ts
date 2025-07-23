@@ -185,20 +185,6 @@ export class TrackingGateway implements OnGatewayConnection, OnGatewayDisconnect
         return { event: 'error', data: 'No driver entity found for this user.' };
       }
 
-      // Verify driver is assigned to the truck
-      const isAssigned = await this.trucksService.isDriverAssignedToTruck(
-        String(driver.id),
-        updateLocationDto.truckId,
-      );
-
-      if (!isAssigned) {
-        client.emit('error', {
-          message: 'Driver is not assigned to this truck.',
-          code: 'NOT_ASSIGNED',
-        });
-        return { event: 'error', data: 'Driver is not assigned to this truck.' };
-      }
-
       // Update location through tracking service - FIXED: Pass user.sub instead of driver.id
       const locationHistory = await this.trackingService.updateLocation(
         updateLocationDto,
